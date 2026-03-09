@@ -1,3 +1,6 @@
+import vue from '@vitejs/plugin-vue'
+import pugPlugin from 'vite-plugin-pug'
+
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   devtools: { enabled: true },
@@ -52,6 +55,41 @@ export default defineNuxtConfig({
       nuxtLink: {
         prefetch: true,
         prefetchOn: { visibility: false, interaction: true },
+      },
+    },
+  },
+  nitro: {
+    rollupConfig: {
+      plugins: [vue({ exclude: '.nuxt/**' })],
+    },
+    compressPublicAssets: {
+      brotli: true,
+      gzip: true,
+    },
+  },
+  vite: {
+    plugins: [
+      pugPlugin(),
+    ],
+    build: {
+      rollupOptions: {
+        output: {
+          // Rollup will try and merge small chuks
+          // experimentalMinChunkSize: 15_000,
+          manualChunks(id) {
+            // 1) Always keep Vue runtime in its own chunk so that changes to our code do not ivalidate this
+            if (id.includes('/node_modules/vue/')) return 'framework'
+            if (id.includes('/node_modules/@vue/')) return 'framework'
+            if (id.includes('/node_modules/vue-router/')) return 'framework'
+
+            // 2) Coarse bucket for your app code, usually utils and composables are small so it makes sense to keep then on one chunk
+            if (/(?:^|\/)app\/util(?:\/|$)/.test(id)) return 'app-common'
+            if (/(?:^|\/)app\/composables(?:\/|$)/.test(id)) return 'app-common'
+
+            // 3) Everything else: default behavior
+            return undefined
+          },
+        },
       },
     },
   },

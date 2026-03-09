@@ -2,6 +2,7 @@
 <div>
 	<p class="p">View Font Lora</p>
 	<IbmText />
+	<Test />
 </div>
 </template>
 
